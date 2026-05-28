@@ -2,12 +2,12 @@ import User from "../models/user.models.js";
 import jwt from "jsonwebtoken";
 import { redis } from "../lib/redis.js";
 
-const generateTokens = async (userId) => {
-    const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
+const generateTokens = async (userId, role = "customer") => {
+    const accessToken = jwt.sign({ userId, role }, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: "15m"
     });
 
-    const refreshToken = jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET, {
+    const refreshToken = jwt.sign({ userId, role }, process.env.REFRESH_TOKEN_SECRET, {
         expiresIn: "7d"
     });
     return { accessToken, refreshToken }
@@ -45,7 +45,7 @@ export const signup = async (req, res) => {
 
     const user = await User.create({ name, email, password })
 
-    const { accessToken, refreshToken } = await generateTokens(user._id);
+    const { accessToken, refreshToken } = await generateTokens(user._id, user.role);
     console.log(refreshToken);
     console.log(typeof refreshToken);
     await storeRefreshToken(user._id, refreshToken)
@@ -71,7 +71,7 @@ export const login = async (req, res) => {
         console.log(user)
         console.log(user.comparePassword(password), "heee")
         if (user && (await user.comparePassword(password))) {
-            const { accessToken, refreshToken } = await generateTokens(user._id)
+            const { accessToken, refreshToken } = await generateTokens(user._id, user.role)
             await storeRefreshToken(user._id, refreshToken);
             setCookies(res, accessToken, refreshToken);
 

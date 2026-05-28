@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 
 export const protectRoute = (req, res, next) => {
     try {
-        const token = req.cookies.token;
+        const token = req.cookies.accessToken;
         
         if (!token) {
             return res.status(401).json({ error: "Unauthorized - No token provided" });
@@ -10,6 +10,7 @@ export const protectRoute = (req, res, next) => {
 
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
         req.userId = decoded.userId;
+        req.role = decoded.role;
         next();
     } catch (error) {
         res.status(401).json({ error: "Unauthorized - Invalid token" });
@@ -18,7 +19,7 @@ export const protectRoute = (req, res, next) => {
 
 export const adminRoute = (req, res, next) => {
     try {
-        const token = req.cookies.token;
+        const token = req.cookies.accessToken;
         
         if (!token) {
             return res.status(401).json({ error: "Unauthorized - No token provided" });
@@ -31,6 +32,7 @@ export const adminRoute = (req, res, next) => {
         }
         
         req.userId = decoded.userId;
+        req.role = decoded.role;
         next();
     } catch (error) {
         res.status(401).json({ error: "Unauthorized - Invalid token" });
