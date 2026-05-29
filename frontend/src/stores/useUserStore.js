@@ -36,7 +36,7 @@ export const useUserStore=create((set, get)=>({
             toast.success("Logged in Successfully")
         }catch(error){
             set({loading:false})
-            console.log(error.response.data)
+            // console.log(error.response.data)
             toast.error(error.response.data.message || "An error occured, try again later")
         }
 

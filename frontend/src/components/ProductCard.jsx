@@ -1,14 +1,29 @@
 import React from 'react'
 import toast from 'react-hot-toast'
 import {ShoppingCart} from 'lucide-react'
+import { useUserStore } from '../stores/useUserStore'
+import { useCartStore } from '../stores/useCartStore'
 
 
 const ProductCard = ({ product }) => {
     const placeholderImage = "https://via.placeholder.com/400x300?text=No+Image";
     const imageUrl = product?.image || placeholderImage;
 
-    const handleAddToCart = () => {
-        toast.success("Added to cart")
+    const {user}=useUserStore();
+
+    const {addToCart}=useCartStore()
+
+
+    const handleAddToCart = (product) => {
+        console.log(product)
+        if(!user){
+            toast.error("Please login to add products to cart")
+            return;
+        }else{
+            addToCart(product)
+
+        }
+        // toast.success("Added to cart")
     }
 
     return (
@@ -35,7 +50,7 @@ const ProductCard = ({ product }) => {
 				<button
 					className='flex items-center justify-center rounded-lg bg-emerald-600 px-5 py-2.5 text-center text-sm font-medium
 					 text-white hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300'
-					onClick={handleAddToCart}
+					onClick={() => handleAddToCart(product)}
 				>
 					<ShoppingCart size={22} className='mr-2' />
 					Add to cart
