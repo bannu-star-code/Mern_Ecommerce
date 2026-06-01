@@ -5,7 +5,7 @@ import Coupon from "../models/coupon.model.js";
 
 export const createCheckoutSession = async (req, res) => {
     try {
-        const { products, coupCode } = req.body
+        const { products, couponCode } = req.body
 
         if (!Array.isArray(products) || products.length == 0) {
             return res.status(400).json({ error: "Invalid or empty products array" });
@@ -26,7 +26,7 @@ export const createCheckoutSession = async (req, res) => {
                     },
                     unit_amount: amount,
                 },
-                quantity: product.quantity || 1
+                quantity: product.quantity || 1,
             };
         });
 
@@ -98,7 +98,7 @@ async function createNewCoupon(userId){
     await Coupon.findOneAndDelete({userId});
 
     const newCoupon=new Coupon({
-        code:"GIFT"+Math.random().toString(36).sunstring(2,8).toUpperCase(),
+        code:"GIFT"+Math.random().toString(36).substring(2,8).toUpperCase(),
         discountPercentage:10,
         expirationDate: new Date(Date.now() + 30*24*60*60*1000),
         userId:userId,
