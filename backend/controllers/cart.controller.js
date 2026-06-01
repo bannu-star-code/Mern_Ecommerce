@@ -6,14 +6,16 @@ import User from "../models/user.models.js"
 
 export const getCartProducts = async (req, res) => {
     try {
-        const products=await Product.find({_id:{$in:req.user.cartItems}})
+        // user.cartItems is an array of { product: ObjectId, quantity }
+        const productIds = req.user.cartItems.map((ci) => ci.product);
+        const products = await Product.find({ _id: { $in: productIds } });
 
-        //add qauntity for each product
-        const cartItems=products.map((product)=>{
-            const item=req.user.cartItems.find((cartItem)=> cartItem.id===product.id)
-            return {...product.toJSON(), quantity:item.quantity};
-        })
-        res.json(cartItems)
+        const cartItems = products.map((product) => {
+            const item = req.user.cartItems.find((cartItem) => String(cartItem.product) === String(product._id));
+            return { ...product.toObject(), quantity: item ? item.quantity : 1 };
+        });
+
+        res.json(cartItems);
     } catch (error) {
         console.log("Error in getCartProducts controller", error.message)
         res.status(500).json({ message: "server error", error: error.message })
@@ -24,18 +26,17 @@ export const getCartProducts = async (req, res) => {
 export const addToCart = async (req, res) => {
     try {
         const { productId } = req.body
-        const user = req.user
+        const user = req.user;
 
-        const existingItem = user.cartItems.find(item => item.id == productId)
+        const existingItem = user.cartItems.find((item) => String(item.product) === String(productId));
         if (existingItem) {
-            existingItem.quantity = existingItem.quantity+ 1;
-            console.log(existingItem.quantity, "quantity increased")
+            existingItem.quantity = existingItem.quantity + 1;
         } else {
-            user.cartItems.push(productId)
+            user.cartItems.push({ product: productId, quantity: 1 });
         }
 
-        await user.save()
-        res.json(user.cartItems)
+        await user.save();
+        res.json(user.cartItems);
 
     } catch (error) {
         console.log("Error in addToCart controller", error.message)
@@ -47,13 +48,13 @@ export const removeAllFromCart = async (req, res) => {
     try {
         const { productId } = req.body
         const user = req.user
-        if (!product) {
-            user.cartItems = []
+        if (!productId) {
+            user.cartItems = [];
         } else {
-            user.cartItems = user.cartItems.filter((item) => item.id !== productId)
+            user.cartItems = user.cartItems.filter((item) => String(item.product) !== String(productId));
         }
-        await user.save()
-        res.json(user.cartItems)
+        await user.save();
+        res.json(user.cartItems);
     } catch (error) {
         console.log("Error in removeAllFromCart controller", error.message)
         res.status(500).json({ message: "server error", error: error.message })
@@ -65,19 +66,19 @@ export const updateQuantity = async (req, res) => {
         const { id: productId } = req.params
         const { quantity } = req.body
         const user = req.user
-        const existingItem = user.cartItems.find((item) => item.id === productId)
+        const existingItem = user.cartItems.find((item) => String(item.product) === String(productId));
         if (existingItem) {
             if (quantity === 0) {
-                user.cartItems = user.cartItems.filter((item) => item.id !== productId)
+                user.cartItems = user.cartItems.filter((item) => String(item.product) !== String(productId));
                 await user.save();
                 return res.json(user.cartItems);
             }
 
-            existingItem.quantity = quantity
-            await user.save()
-            res.json(user.cartItems)
+            existingItem.quantity = quantity;
+            await user.save();
+            res.json(user.cartItems);
         } else {
-            res.status(404).json({ message: "Product not found" })
+            res.status(404).json({ message: "Product not found" });
 
         }
     } catch (error) {
