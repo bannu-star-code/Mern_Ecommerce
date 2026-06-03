@@ -1,8 +1,12 @@
 import Coupon from "../models/coupon.model.js"
 
 export const getCoupon = async (req, res) => {
+    // code=req.query.code
+    //     console.log(code, "codee")
+        
     try {
-        const copon = Coupon.findOne({ userId: req.user._id, isActive: true })
+        const coupon = await Coupon.findOne({ userId: req.user._id, isActive: true })
+        // console.log("coupon from getCoupon controller", coupon)
         res.json(coupon || null);
 
     } catch (error) {
@@ -12,9 +16,12 @@ export const getCoupon = async (req, res) => {
 }
 
 export const validateCoupon = async (req, res) => {
+    console.log(req.body, "vmvmvmvmvmvm")
+
     try {
         const { code } = req.body
-        const coupon = await Coupon.findOne({ code: code, userId: req.user._id, isActive: true })
+        console.log("code from validate controller", code)
+        const coupon = await Coupon.findOne({ userId: req.user._id, isActive: true })
         if (!coupon) {
             return res.status(404).json({ message: "Coupon not found" })
         }
@@ -24,6 +31,7 @@ export const validateCoupon = async (req, res) => {
             await coupon.save();
             return res.status(404).json({ message: "Coupon Expired" })
         }
+        console.log("in validate")
 
         res.json({
             message: "Coupon is Valid",

@@ -4,41 +4,36 @@ import { useEffect } from 'react';
 import {motion} from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { MoveRight } from 'lucide-react';  
-import {loadStripe} from '@stripe/stripe-js';
 import axios from '../lib/axios';
+import { loadStripe } from "@stripe/stripe-js";
 
-const stripePromise= loadStripe('pk_test_51TdU1vPgBY9jvR7NX9PQJ73HN96CbJk7D9GJMbeFptKteZRCBBDamOzKzEhv7zvnOq0DIjzmTKjj7GlJGMtxHNYH00t6DYs7Jl')
-
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const OrderSummary = () => {
-    const {calculateTotals, total, isCouponApplied, subtotal, cart}=useCartStore();
+    const {calculateTotals, total, isCouponApplied, subtotal, cart, coupon}=useCartStore();
 
     const savings = subtotal - total;
 	const formattedSubtotal = subtotal.toFixed(2);
 	const formattedTotal = total.toFixed(2);
 	const formattedSavings = savings.toFixed(2);
-    const coupon = "HDHDBSH"
+    // const coupon = "GIFTBLQVFB"
 
-    const handlePayment=async ()=>{
-        const stripe=await stripePromise;
-        const res=await axios.post("/payments/create-checkout-session",{
-            products:cart,
-            coupon:coupon?coupon.code:null,
+    const handlePayment = async () => {
+        try {
+            const res = await axios.post("/payments/create-checkout-session", {
+                products: cart,
+                couponCode: coupon ? coupon.code : null,
+            });
 
-
-        })
-
-        const session=res.data;
-        console.log(session)
-
-        const result = await stripe.redirectToCheckout({
-			sessionId: session.id,
-		});
-
-		if (result.error) {
-			console.error("Error:", result.error);
-		}
-
+            const { url } = res.data;
+            if (url) {
+                window.location.href = url;
+            } else {
+                console.error("No checkout URL returned");
+            }
+        } catch (error) {
+            console.error("Payment error:", error.message);
+        }
     }
 
      useEffect(() => {
@@ -67,7 +62,7 @@ const OrderSummary = () => {
 						</dl>
 					)}
 
-					{isCouponApplied && (
+					{ coupon && isCouponApplied && (
 						<dl className='flex items-center justify-between gap-4'>
 							<dt className='text-base font-normal text-gray-300'>Coupon ({coupon.code})</dt>
 							<dd className='text-base font-medium text-emerald-400'>-{coupon.discountPercentage}%</dd>

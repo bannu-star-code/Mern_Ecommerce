@@ -21,7 +21,7 @@ export const getFeaturedProducts = async (req, res) => {
         }
 
         //lean is used for fast perfoermance and return plain javascript object
-        featuredProducts = await Product.find({ isFeatured: True }).lean();
+        featuredProducts = await Product.find({ isFeatured: true }).lean();
 
         await redis.set("featured_porducts", JSON.stringify(featuredProducts))
 

@@ -22,13 +22,13 @@ const setCookies = (res, accessToken, refreshToken) => {
     res.cookie("accessToken", accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "lax",
         maxAge: 15 * 60 * 1000,
     })
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
     })
 }
@@ -46,8 +46,7 @@ export const signup = async (req, res) => {
     const user = await User.create({ name, email, password })
 
     const { accessToken, refreshToken } = await generateTokens(user._id, user.role);
-    console.log(refreshToken);
-    console.log(typeof refreshToken);
+    
     await storeRefreshToken(user._id, refreshToken)
 
     setCookies(res, accessToken, refreshToken)
@@ -102,16 +101,29 @@ export const logout = async (req, res) => {
         }
         res.clearCookie("accessToken");
         res.clearCookie("refreshToken");
-        res.json({ message: "Loggoed out successfully" });
+        res.json({ message: "Logged out successfully" });
     } catch (error) {
         res.status(500).json({ message: "server error", error: error.message });
     }
 }
-// export const refreshToken = async (req, res) => {
 
-// }
+export const getProfile = async (req, res) => {
+    try {
+        const user = req.user;
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
 
-// export const getProfile = async (req, res) => { }
+        res.json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
 
 export const l = async (req, res) => {
     res.json("Hellooo")

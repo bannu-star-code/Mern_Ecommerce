@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import axios from '../lib/axios.js';
 import { toast } from 'react-hot-toast';
 
+
 export const useCartStore = create((set, get) => ({
     cart: [],
     coupon: null,
@@ -9,6 +10,32 @@ export const useCartStore = create((set, get) => ({
     subtotal: 0,
     isCouponApplied:false,
     
+    getMyCoupon:async()=>{
+        try{
+            const response=await axios.get("/coupons")
+            set({coupon:response.data})
+        } catch(error){
+            console.log("Error fetching coupon", error)
+        }
+    },
+
+    applyCoupon:async()=>{
+        try{
+            const response=await axios.post("/coupons/validate", {code});
+            set({coupon:response.data, isCouponApplied:true});
+            get().calculateTotals();
+            toast.success("Coupon applied successfully")
+        } catch(error){
+            toast.error(error.response?.data?.error || "Failed to apply Couponns")
+
+        }
+    },
+    removeCoupon: () => {
+		set({ coupon: null, isCouponApplied: false });
+		get().calculateTotals();
+		toast.success("Coupon removed");
+	},
+
 
     getCartItems: async () => {
         try {
@@ -19,6 +46,15 @@ export const useCartStore = create((set, get) => ({
             set({ cart: [] });
             toast.error(error.response?.data?.error || "Failed to fetch cart items");
         }
+    },
+
+    clearCart:async()=>{
+        try {
+            await axios.delete("/cart");
+        } catch (error) {
+            console.warn("Failed to clear cart on server", error.response?.data?.error || error.message);
+        }
+        set({ cart: [], coupon: null, total: 0, subtotal: 0, isCouponApplied: false });
     },
 
     addToCart: async (product) => {

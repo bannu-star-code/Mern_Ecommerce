@@ -13,15 +13,26 @@ import AdminPage from './pages/AdminPage'
 import CategoryPage from './pages/CategoryPage'
 import { CarTaxiFront } from 'lucide-react'
 import CartPage from './pages/CartPage'
+import PurchaseSuccessPage from './pages/PurchaseSuccessPage'
 // import './App.css'
+import {useCartStore} from './stores/useCartStore'
+import PurchaseCancelPage from './pages/PurchaseCancelPage'
 
 function App() {
 
   const {user, checkAuth, checkingAuth}=useUserStore()
 
+  const {getCartItems}=useCartStore()
+
+  // console.log(user)
   useEffect(()=>{
     checkAuth();
-  },[checkAuth]);
+
+  }, [checkAuth])
+
+  useEffect(()=>{
+    getCartItems();
+  },[getCartItems]);
 
   if(checkingAuth) return <LoadingSpinner/>;
   return (
@@ -34,6 +45,9 @@ function App() {
         <Route path='/secret-dashboard' element={user?.role==='admin'?<AdminPage/>:<Navigate to="/login"/>}/>
         <Route path='/category/:category' element={<CategoryPage />}/>
         <Route path='/cart' element={user?<CartPage/>: <Navigate to="/"/>}/>
+        <Route path='/purchase-success' element={<PurchaseSuccessPage/>}/>
+        <Route path='/purchase-cancel' element={<PurchaseCancelPage/>}/>
+        {/* <Route path='*' element={<Navigate to='/' replace />} /> */}
 
       </Routes>
       <Toaster position="top-center" />
